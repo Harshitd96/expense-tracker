@@ -244,51 +244,32 @@
     }
 
     /* Responsive */
-    @media (max-width: 700px) {
-      body {
-        padding: 25px 10px;
-      }
+    @media (max-width: 480px) {
+  .totals div {
+    flex: 1 1 100%;
+    min-width: auto;
+  }
 
-      .container {
-        padding: 25px 20px 30px;
-      }
+  table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 
-      h1 {
-        font-size: 1.6rem;
-      }
+  thead, tbody, tr, th, td {
+    white-space: nowrap;
+  }
 
-      form {
-        flex-direction: column;
-      }
+  .action-btns {
+    flex-direction: column;
+    gap: 4px;
+  }
 
-      form > div {
-        flex: 1 1 100%;
-        min-width: auto;
-      }
-
-      .button-group {
-        justify-content: center;
-      }
-
-      button {
-        min-width: 160px;
-        flex: none;
-      }
-
-      .totals {
-        justify-content: center;
-      }
-
-      .charts-container {
-        flex-wrap: wrap;
-      }
-
-      canvas {
-        max-width: 100%;
-        flex: 1 1 100%;
-        margin-bottom: 20px;
-      }
-    }
+  .action-btns button {
+    width: 100%;
+    padding: 6px 8px;
+  }
+}
   </style>
 </head>
 <body>
