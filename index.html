@@ -818,33 +818,52 @@ checkAndSetupFileConnection();
       }
 
       // Download CSV export of expenses
-window.downloadCSV = function() {
+window.downloadCSV = function () {
   if (expenses.length === 0) {
-    alert('No expenses to export.');
+    alert("No expenses to export.");
     return;
   }
 
-  if (isFileSystemAccessSupported()) {
-    const header = ['Date', 'Category', 'Description', 'Amount (₹)'];
-    const rows = expenses.map(e => [e.date, e.category, e.description, e.amount]);
-    const csvContent = [header, ...rows]
-      .map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
-      .join('\n');
+  // CSV Header
+  const header = ["Date", "Category", "Description", "Amount (₹)"];
+  const rows = expenses.map((e) => [e.date, e.category, e.description, e.amount]);
+  const csvContent = [header, ...rows]
+    .map((row) => row.map((field) => `"${field.toString().replace(/"/g, '""')}"`).join(","))
+    .join("\n");
 
-    const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  if (isFileSystemAccessSupported()) {
+    // Use File System Access API for supported browsers
+    if (!csvFileHandle) {
+      alert("No file connected. Please connect a file to save expenses.");
+      return;
+    }
+
+    (async () => {
+      try {
+        const writable = await csvFileHandle.createWritable();
+        await writable.write(csvContent); // Write entire CSV content
+        await writable.close();
+        alert("CSV file updated successfully!");
+      } catch (err) {
+        alert(`Error writing to file: ${err.message}`);
+      }
+    })();
+  } else {
+    // Fallback: Create downloadable CSV file
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = `expenses_${new Date().toISOString().slice(0,10)}.csv`;
+    a.download = `expenses_${new Date().toISOString().slice(0, 10)}.csv`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  } else {
-    downloadFallbackFile();
+    alert("CSV file downloaded successfully!");
   }
 };
+
 
 
       // Initialization
