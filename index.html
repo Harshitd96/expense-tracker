@@ -355,7 +355,7 @@
       // File System Access API CSV appender logic
 const connectFileBtn = document.getElementById('connectFileBtn');
 let csvFileHandle = null;
-
+let fallbackFileContent = ''; 
 
 // IndexedDB wrapper to save file handle using structured clone
 function getDB() {
@@ -848,15 +848,16 @@ window.downloadCSV = function() {
 
 
       // Initialization
-      function init() {
-        setTodayDate();
-        loadExpenses();
-        renderExpenses();
-        updateTotals();
-        updateCharts();
+function init() {
+  setTodayDate();
+  loadExpenses();
+  renderExpenses();
+  updateTotals();
+  updateCharts();
+  checkAndSetupFileConnection();
 
-        form.addEventListener('submit', addOrUpdateExpense);
-      }
+  form.addEventListener('submit', addOrUpdateExpense);
+}
 
       init();
     })();
