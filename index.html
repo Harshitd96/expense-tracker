@@ -281,7 +281,9 @@
   <button id="connectFileBtn" type="button" style="display:none; background:#17a2b8; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; box-shadow: 0 3px 6px rgb(0 123 255 / 0.25); user-select:none;">
     Connect File for Auto Save
   </button>
+  <input type="file" id="fileInputFallback" accept=".csv" style="display: none;" />
 </div>
+
 
     <form id="expense-form" autocomplete="off" novalidate>
       <div>
@@ -353,6 +355,7 @@
       // File System Access API CSV appender logic
 const connectFileBtn = document.getElementById('connectFileBtn');
 let csvFileHandle = null;
+
 
 // IndexedDB wrapper to save file handle using structured clone
 function getDB() {
@@ -439,16 +442,32 @@ async function appendExpenseToFile(expense) {
 
 // Show the Connect File button only if API is supported and no file connected yet
 async function checkAndSetupFileConnection() {
-  if (!window.showSaveFilePicker) {
-    // API not supported, hide button
-    connectFileBtn.style.display = 'none';
+  const fileInputFallback = document.getElementById('fileInputFallback');
+
+  function isFileSystemAccessSupported() {
+    return 'showSaveFilePicker' in window;
+  }
+
+  if (!isFileSystemAccessSupported()) {
+    // Fallback for unsupported browsers
+    connectFileBtn.textContent = 'Upload File';
+    connectFileBtn.style.display = 'inline-block';
+    connectFileBtn.onclick = () => fileInputFallback.click();
+
+    fileInputFallback.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        fallbackFileContent = await file.text();
+        alert('File loaded successfully! You can now add expenses.');
+      }
+    };
     return;
   }
 
+  // File System Access API Logic
   try {
     csvFileHandle = await loadFileHandle();
     if (csvFileHandle) {
-      // We have saved file handle, check permission
       if (!(await verifyPermission(csvFileHandle, true))) {
         connectFileBtn.style.display = 'inline-block';
       } else {
@@ -461,6 +480,7 @@ async function checkAndSetupFileConnection() {
     connectFileBtn.style.display = 'inline-block';
   }
 }
+
 
 // On clicking Connect File
 connectFileBtn.onclick = async () => {
@@ -756,6 +776,13 @@ checkAndSetupFileConnection();
         updateTotals();
         updateCharts();
 
+          // Append expense to the correct file storage
+        if (isFileSystemAccessSupported()) {
+          appendExpenseToFile(expense);
+        } else {
+          appendExpenseToFallbackFile(expense);
+        }
+
         form.reset();
         setTodayDate();
         appendExpenseToFile(newExp);
@@ -791,28 +818,34 @@ checkAndSetupFileConnection();
       }
 
       // Download CSV export of expenses
-      window.downloadCSV = function() {
-        if (expenses.length === 0) {
-          alert('No expenses to export.');
-          return;
-        }
-        const header = ['Date', 'Category', 'Description', 'Amount (₹)'];
-        const rows = expenses.map(e => [e.date, e.category, e.description, e.amount]);
-        const csvContent = [header, ...rows]
-          .map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
-          .join('\n');
+window.downloadCSV = function() {
+  if (expenses.length === 0) {
+    alert('No expenses to export.');
+    return;
+  }
 
-        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-        const url = URL.createObjectURL(blob);
+  if (isFileSystemAccessSupported()) {
+    const header = ['Date', 'Category', 'Description', 'Amount (₹)'];
+    const rows = expenses.map(e => [e.date, e.category, e.description, e.amount]);
+    const csvContent = [header, ...rows]
+      .map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
+      .join('\n');
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `expenses_${new Date().toISOString().slice(0,10)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      };
+    const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `expenses_${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } else {
+    downloadFallbackFile();
+  }
+};
+
 
       // Initialization
       function init() {
