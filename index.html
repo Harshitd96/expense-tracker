@@ -281,8 +281,8 @@
   <button id="connectFileBtn" type="button" style="display:none; background:#17a2b8; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; box-shadow: 0 3px 6px rgb(0 123 255 / 0.25); user-select:none;">
     Connect File for Auto Save
   </button>
+  <input type="file" id="fileInputFallback" accept=".csv" style="display: none;" />
 </div>
-
 
 
     <form id="expense-form" autocomplete="off" novalidate>
@@ -315,10 +315,6 @@
 
       <div class="button-group">
         <button type="submit">Add Expense</button>
-        <button id="generateCsvBtn" type="button" style="background:#28a745; color:white; padding:10px 20px; border:none; border-radius:8px; cursor:pointer; font-weight:600; box-shadow: 0 3px 6px rgb(0 0 0 / 0.15);">
-  Generate CSV
-</button>
-
         <button type="button" onclick="downloadCSV()">Download CSV</button>
       </div>
     </form>
@@ -359,6 +355,8 @@
       // File System Access API CSV appender logic
 const connectFileBtn = document.getElementById('connectFileBtn');
 let csvFileHandle = null;
+let fallbackFileContent = ''; 
+
 
 // IndexedDB wrapper to save file handle using structured clone
 function getDB() {
@@ -445,16 +443,30 @@ async function appendExpenseToFile(expense) {
 
 // Show the Connect File button only if API is supported and no file connected yet
 async function checkAndSetupFileConnection() {
-  if (!window.showSaveFilePicker) {
-    // API not supported, hide button
-    connectFileBtn.style.display = 'none';
+  const fileInputFallback = document.getElementById('fileInputFallback');
+
+
+
+  if (!isFileSystemAccessSupported()) {
+    // Fallback for unsupported browsers
+    connectFileBtn.textContent = 'Upload File';
+    connectFileBtn.style.display = 'inline-block';
+    connectFileBtn.onclick = () => fileInputFallback.click();
+
+    fileInputFallback.onchange = async (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        fallbackFileContent = await file.text();
+        alert('File loaded successfully! You can now add expenses.');
+      }
+    };
     return;
   }
 
+  // File System Access API Logic
   try {
     csvFileHandle = await loadFileHandle();
     if (csvFileHandle) {
-      // We have saved file handle, check permission
       if (!(await verifyPermission(csvFileHandle, true))) {
         connectFileBtn.style.display = 'inline-block';
       } else {
@@ -467,6 +479,7 @@ async function checkAndSetupFileConnection() {
     connectFileBtn.style.display = 'inline-block';
   }
 }
+
 
 // On clicking Connect File
 connectFileBtn.onclick = async () => {
@@ -762,6 +775,13 @@ checkAndSetupFileConnection();
         updateTotals();
         updateCharts();
 
+          // Append expense to the correct file storage
+        if (isFileSystemAccessSupported()) {
+          appendExpenseToFile(expense);
+        } else {
+          appendExpenseToFallbackFile(expense);
+        }
+
         form.reset();
         setTodayDate();
         appendExpenseToFile(newExp);
@@ -796,73 +816,89 @@ checkAndSetupFileConnection();
         }
       }
 
-      // Download CSV export of expenses
-      window.downloadCSV = function() {
-        if (expenses.length === 0) {
-          alert('No expenses to export.');
-          return;
-        }
-        const header = ['Date', 'Category', 'Description', 'Amount (₹)'];
-        const rows = expenses.map(e => [e.date, e.category, e.description, e.amount]);
-        const csvContent = [header, ...rows]
-          .map(row => row.map(field => `"${field.toString().replace(/"/g, '""')}"`).join(','))
-          .join('\n');
+      // Check if the File System Access API is supported
+function isFileSystemAccessSupported() {
+  return 'showSaveFilePicker' in window;
+}
 
-        const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
-        const url = URL.createObjectURL(blob);
+// Updated downloadCSV function
+// Check if File System Access API is supported
+function isFileSystemAccessSupported() {
+  const isSupported = 'showSaveFilePicker' in window;
+  console.log("File System Access API Supported:", isSupported);
+  return isSupported;
+}
 
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `expenses_${new Date().toISOString().slice(0,10)}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      };
-
-
-      document.getElementById('generateCsvBtn').addEventListener('click', function () {
+// Download CSV function
+window.downloadCSV = function () {
   if (expenses.length === 0) {
-    alert('No expenses to export.');
+    alert("No expenses to export.");
     return;
   }
 
-  // Define CSV headers
-  const headers = ['Date', 'Category', 'Description', 'Amount (₹)'];
+  const header = ["Date", "Category", "Description", "Amount (₹)"];
+  const rows = expenses.map((e) => [e.date, e.category, e.description, e.amount]);
+  const csvContent = [header, ...rows]
+    .map((row) => row.map((field) => `"${field.toString().replace(/"/g, '""')}"`).join(","))
+    .join("\n");
 
-  // Map expenses to CSV rows
-  const rows = expenses.map(({ date, category, description, amount }) =>
-    [date, category, description, amount].map(field => `"${field?.toString().replace(/"/g, '""') || ''}"`).join(',')
-  );
+  try {
+    if (isFileSystemAccessSupported()) {
+      console.log("Using File System Access API for CSV download.");
+      // File System Access API logic
+      if (!csvFileHandle) {
+        alert("No file connected. Please connect a file to save expenses.");
+        return;
+      }
 
-  // Combine headers and rows
-  const csvContent = [headers.join(','), ...rows].join('\n');
+      (async () => {
+        try {
+          const writable = await csvFileHandle.createWritable();
+          await writable.write(csvContent);
+          await writable.close();
+          alert("CSV file updated successfully!");
+        } catch (err) {
+          console.error("Error writing to file:", err);
+          alert(`Error writing to file: ${err.message}`);
+        }
+      })();
+    } else {
+      console.log("Using Blob-based fallback for CSV download.");
+      // Fallback for unsupported browsers
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
 
-  // Create Blob for the CSV
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `expenses_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
 
-  // Generate a download link
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `expenses_${new Date().toISOString().slice(0, 10)}.csv`;
-  document.body.appendChild(a); // Required for Firefox
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-});
+      URL.revokeObjectURL(url);
+      alert("CSV file downloaded successfully!");
+    }
+  } catch (error) {
+    console.error("Error during CSV download:", error);
+    alert("An unexpected error occurred while downloading the CSV file.");
+  }
+};
+
+
 
 
       // Initialization
-      function init() {
-        setTodayDate();
-        loadExpenses();
-        renderExpenses();
-        updateTotals();
-        updateCharts();
+function init() {
+  setTodayDate();
+  loadExpenses();
+  renderExpenses();
+  updateTotals();
+  updateCharts();
+  checkAndSetupFileConnection();
+  document.querySelector('button[onclick="downloadCSV()"]').onclick = downloadCSV;
 
-        form.addEventListener('submit', addOrUpdateExpense);
-      }
+  form.addEventListener('submit', addOrUpdateExpense);
+}
 
       init();
     })();
