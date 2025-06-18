@@ -129,10 +129,10 @@
     }
 
     button[type="button"] {
-      background-color: #6c757d;
+      background-color: #007bff;
     }
     button[type="button"]:hover {
-      background-color: #565e64;
+      background-color: #0056b3;
     }
 
     /* Totals display below buttons */
@@ -313,6 +313,8 @@
 
       <div class="button-group">
         <button type="submit">Add Expense</button>
+        <button id="upload-csv-btn" type="button">Upload CSV</button>
+        <input type="file" id="upload-csv" accept=".csv" style="display: none;" />
         <button type="button" onclick="downloadCSV()">Download CSV</button>
       </div>
     </form>
@@ -353,6 +355,83 @@
       // File System Access API CSV appender logic
 const connectFileBtn = document.getElementById('connectFileBtn');
 let csvFileHandle = null;
+
+// Trigger file input dialog when button is clicked
+document.getElementById('upload-csv-btn').addEventListener('click', () => {
+  document.getElementById('upload-csv').click();
+});
+
+// Handle file selection
+document.getElementById('upload-csv').addEventListener('change', async (event) => {
+  const file = event.target.files[0];
+  if (!file) {
+    alert('Please select a file.');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target.result;
+    parseCSV(content);
+  };
+  reader.onerror = () => {
+    alert('Error reading the file.');
+  };
+  reader.readAsText(file);
+});
+
+
+
+// Parse CSV Content
+function parseCSV(content) {
+  const rows = content.split(/\r?\n/).filter(row => row.trim() !== ''); // Handle both LF and CRLF line endings
+  if (rows.length < 2) {
+    alert('Invalid CSV format: No data rows found.');
+    return;
+  }
+
+  const header = rows.shift().split(',').map(h => h.trim());
+
+  // Validate Header
+  const expectedHeader = ['Date', 'Category', 'Description', 'Amount (₹)'];
+  if (!header.every((col, index) => col === expectedHeader[index])) {
+    alert(`Invalid CSV format: Expected header: ${expectedHeader.join(', ')}`);
+    return;
+  }
+
+  rows.forEach((row, index) => {
+    const columns = row.split(',').map(col => col.replace(/(^"|"$)/g, '').trim());
+
+    if (columns.length !== 4) {
+      console.warn(`Skipping invalid row ${index + 2}: ${row}`); // Row index adjusted for 1-based CSV indexing
+      return;
+    }
+
+    const [date, category, description, amount] = columns;
+
+    // Validate data
+    if (!date || !category || !description || isNaN(parseFloat(amount))) {
+      console.warn(`Skipping invalid data in row ${index + 2}: ${row}`);
+      return;
+    }
+
+    // Add to expenses
+    expenses.push({
+      date,
+      category,
+      description,
+      amount: parseFloat(amount).toFixed(2),
+    });
+  });
+
+  // Save and Refresh UI
+  saveExpenses();
+  renderExpenses();
+  updateTotals();
+  updateCharts();
+  alert('CSV data uploaded successfully!');
+}
+
 
 // IndexedDB wrapper to save file handle using structured clone
 function getDB() {
@@ -480,16 +559,31 @@ connectFileBtn.onclick = async () => {
       csvFileHandle = handle;
       await saveFileHandle(handle);
 
-      // If file empty, write header row
+      // Check if file is empty and write header + data
       const file = await csvFileHandle.getFile();
+      const writable = await csvFileHandle.createWritable();
+
+      const csvHeader = 'Date,Category,Description,Amount (₹)\n';
+      const csvRows = expenses.map(exp => {
+        return [
+          `"${exp.date}"`,
+          `"${exp.category}"`,
+          `"${exp.description.replace(/"/g, '""')}"`, // Escape double quotes
+          `"${exp.amount}"`,
+        ].join(',');
+      }).join('\n');
+
+      // Write header if file is empty
       if (file.size === 0) {
-        const writable = await csvFileHandle.createWritable();
-        await writable.write('Date,Category,Description,Amount (₹)\n');
-        await writable.close();
+        await writable.write(csvHeader + csvRows);
+      } else {
+        await writable.write(csvRows); // Append rows to existing content
       }
 
+      await writable.close();
+
       connectFileBtn.style.display = 'none';
-      alert('File connected successfully! New expenses will be saved automatically.');
+      alert('File connected and existing data saved successfully!');
     }
   } catch (e) {
     if (e.name !== 'AbortError') {
@@ -497,6 +591,7 @@ connectFileBtn.onclick = async () => {
     }
   }
 };
+
 
 // Call on init to setup button visibility
 checkAndSetupFileConnection();
