@@ -385,37 +385,33 @@ document.getElementById('upload-csv').addEventListener('change', async (event) =
 // Parse CSV Content
 function parseCSV(content) {
   const rows = content.split(/\r?\n/).filter(row => row.trim() !== ''); // Handle both LF and CRLF line endings
-  if (rows.length < 2) {
-    alert('Invalid CSV format: No data rows found.');
-    return;
-  }
 
-  const header = rows.shift().split(',').map(h => h.trim());
+  // Unquote header and data fields
+  const unquote = (field) => field.replace(/^"|"$/g, ''); // Remove leading and trailing quotes
+  const header = rows.shift().split(',').map(unquote);
 
-  // Validate Header
   const expectedHeader = ['Date', 'Category', 'Description', 'Amount (₹)'];
-  if (!header.every((col, index) => col === expectedHeader[index])) {
+  if (!header.every((col, index) => unquote(col) === expectedHeader[index])) {
     alert(`Invalid CSV format: Expected header: ${expectedHeader.join(', ')}`);
     return;
   }
 
   rows.forEach((row, index) => {
-    const columns = row.split(',').map(col => col.replace(/(^"|"$)/g, '').trim());
+    const columns = row.split(',').map(unquote);
 
     if (columns.length !== 4) {
-      console.warn(`Skipping invalid row ${index + 2}: ${row}`); // Row index adjusted for 1-based CSV indexing
+      console.warn(`Skipping invalid row ${index + 2}: ${row}`);
       return;
     }
 
-    const [date, category, description, amount] = columns;
+    let [date, category, description, amount] = columns;
+    amount = amount.replace(/[₹,]/g, ''); // Remove rupee symbol and commas
 
-    // Validate data
     if (!date || !category || !description || isNaN(parseFloat(amount))) {
       console.warn(`Skipping invalid data in row ${index + 2}: ${row}`);
       return;
     }
 
-    // Add to expenses
     expenses.push({
       date,
       category,
@@ -424,13 +420,14 @@ function parseCSV(content) {
     });
   });
 
-  // Save and Refresh UI
   saveExpenses();
   renderExpenses();
   updateTotals();
   updateCharts();
   alert('CSV data uploaded successfully!');
 }
+
+
 
 
 // IndexedDB wrapper to save file handle using structured clone
