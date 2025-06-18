@@ -386,7 +386,6 @@ document.getElementById('upload-csv').addEventListener('change', async (event) =
 function parseCSV(content) {
   const rows = content.split(/\r?\n/).filter(row => row.trim() !== ''); // Handle both LF and CRLF line endings
 
-  // Unquote header and data fields
   const unquote = (field) => field.replace(/^"|"$/g, ''); // Remove leading and trailing quotes
   const header = rows.shift().split(',').map(unquote);
 
@@ -420,12 +419,17 @@ function parseCSV(content) {
     });
   });
 
+  // Save expenses to local storage
   saveExpenses();
+
+  // Refresh the UI
   renderExpenses();
-  updateTotals();
-  updateCharts();
-  alert('CSV data uploaded successfully!');
+  updateTotals(); // Recalculate totals
+  updateCharts(); // Refresh charts
+
+  alert('CSV data uploaded and totals updated successfully!');
 }
+
 
 
 
@@ -693,38 +697,48 @@ checkAndSetupFileConnection();
 
       // Update totals
       function updateTotals() {
-        const now = new Date();
-        const todayStr = now.toISOString().slice(0, 10);
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
 
-        // Helper to get start of week (Monday)
-        function getMonday(d) {
-          const date = new Date(d);
-          const day = date.getDay();
-          const diff = (day === 0 ? -6 : 1) - day; // Monday is 1
-          return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
-        }
-        const monday = getMonday(now);
+  // Helper to get the start of the week (Monday)
+  function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day; // Monday is 1, adjust for Sunday
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+  }
+  const monday = getMonday(now);
 
-        // Start of month
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  // Start of the current month
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-        let dailyTotal = 0;
-        let weeklyTotal = 0;
-        let monthlyTotal = 0;
+  // Initialize totals
+  let dailyTotal = 0;
+  let weeklyTotal = 0;
+  let monthlyTotal = 0;
 
-        expenses.forEach(({date, amount}) => {
-          if (!date || isNaN(amount)) return;
-          const d = new Date(date);
-          const amt = Number(amount);
-          if (date === todayStr) dailyTotal += amt;
-          if (d >= monday && d <= now) weeklyTotal += amt;
-          if (d >= startOfMonth && d <= now) monthlyTotal += amt;
-        });
+  expenses.forEach(({ date, amount }) => {
+    if (!date || isNaN(amount)) return;
+    const expenseDate = new Date(date);
+    const expenseAmount = Number(amount);
 
-        dailyTotalSpan.textContent = dailyTotal.toFixed(2);
-        weeklyTotalSpan.textContent = weeklyTotal.toFixed(2);
-        monthlyTotalSpan.textContent = monthlyTotal.toFixed(2);
-      }
+    if (date === todayStr) {
+      dailyTotal += expenseAmount; // Add to daily total
+    }
+    if (expenseDate >= monday && expenseDate <= now) {
+      weeklyTotal += expenseAmount; // Add to weekly total
+    }
+    if (expenseDate >= startOfMonth && expenseDate <= now) {
+      monthlyTotal += expenseAmount; // Add to monthly total
+    }
+  });
+
+  // Update the UI with the totals
+  document.getElementById('daily-total').textContent = dailyTotal.toFixed(2);
+  document.getElementById('weekly-total').textContent = weeklyTotal.toFixed(2);
+  document.getElementById('monthly-total').textContent = monthlyTotal.toFixed(2);
+}
+
 
       // Update charts
       function updateCharts() {
