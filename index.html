@@ -42,6 +42,41 @@
     margin-top: 5px; /* Add spacing below the label */
     box-shadow: none; /* Remove any box shadow */
   }
+
+  table {
+    font-size: 0.85rem; /* Reduce overall text size */
+  }
+
+  thead th {
+    padding: 8px 10px; /* Reduce header cell padding */
+    font-size: 0.9rem; /* Slightly smaller header font */
+  }
+
+  tbody td {
+    padding: 6px 8px; /* Compact the padding for body cells */
+    font-size: 0.85rem; /* Reduce font size for data rows */
+  }
+
+  tbody tr {
+    margin-bottom: 8px; /* Reduce space between rows */
+  }
+
+  tbody td:last-child {
+    width: auto; /* Adjust actions column to fit dynamically */
+    text-align: center;
+    padding: 5px; /* Compact action buttons */
+  }
+
+  .action-btns button {
+    padding: 4px 6px; /* Make buttons smaller */
+    font-size: 0.8rem; /* Adjust font size for smaller buttons */
+  }
+
+  /* Hide non-critical columns on smaller screens for better compactness */
+  tbody td:nth-child(3), /* Description column */
+  tbody td:nth-child(5) /* Actions column */ {
+    display: none;
+  }
 }
 
 
