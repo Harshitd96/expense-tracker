@@ -23,33 +23,27 @@
       align-items: flex-start;
     }
 
-    @media (max-width: 480px) {
-  label[for="date"] {
-    width: auto; /* Adjust width to match other labels */
-    margin-right: 0; /* Reset margin-right for alignment */
-  }
-
-  #date {
-    width: 100%; /* Ensure the input spans the available width */
-  }
-}
-
-@media (max-width: 480px) {
-  #month-selector {
-    width: 100%; /* Ensure full width for better usability */
-    padding: 8px 10px; /* Add padding for better touch support */
-    font-size: 1rem; /* Match font size with desktop view */
-    border: 1.5px solid #bbb; /* Consistent border styling */
-    border-radius: 6px; /* Rounded corners for uniformity */
-  }
-
+ @media (max-width: 480px) {
   label[for="month-selector"] {
-    width: 100%; /* Make the label span full width */
-    text-align: left; /* Align text to the left */
-    margin-bottom: 5px; /* Add spacing below the label */
-    font-size: 0.95rem; /* Adjust label font size for readability */
+    display: block; /* Ensure it's treated as a block element */
+    width: auto; /* Allow the label to adjust naturally */
+    margin: 0; /* Remove extra margin to align with other labels */
+    font-size: 1rem; /* Match the label font size */
+    font-weight: 600; /* Ensure label styling consistency */
+  }
+
+  #month-selector {
+    display: block; /* Ensure the dropdown spans the full width */
+    width: 100%; /* Match other inputs in size */
+    padding: 10px 12px; /* Uniform padding */
+    font-size: 1rem; /* Match input font size */
+    border: 1.8px solid #bbb; /* Same border style as inputs */
+    border-radius: 6px; /* Uniform rounded corners */
+    margin-top: 5px; /* Add spacing below the label */
+    box-shadow: none; /* Remove any box shadow */
   }
 }
+
 
     .container {
       background: #fff;
