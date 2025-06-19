@@ -23,6 +23,34 @@
       align-items: flex-start;
     }
 
+    @media (max-width: 480px) {
+  label[for="date"] {
+    width: auto; /* Adjust width to match other labels */
+    margin-right: 0; /* Reset margin-right for alignment */
+  }
+
+  #date {
+    width: 100%; /* Ensure the input spans the available width */
+  }
+}
+
+@media (max-width: 480px) {
+  #month-selector {
+    width: 100%; /* Ensure full width for better usability */
+    padding: 8px 10px; /* Add padding for better touch support */
+    font-size: 1rem; /* Match font size with desktop view */
+    border: 1.5px solid #bbb; /* Consistent border styling */
+    border-radius: 6px; /* Rounded corners for uniformity */
+  }
+
+  label[for="month-selector"] {
+    width: 100%; /* Make the label span full width */
+    text-align: left; /* Align text to the left */
+    margin-bottom: 5px; /* Add spacing below the label */
+    font-size: 0.95rem; /* Adjust label font size for readability */
+  }
+}
+
     .container {
       background: #fff;
       max-width: 900px;
@@ -157,101 +185,43 @@
       text-align: center;
     }
 
-    /* Responsive Table Styling */
 table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 10px;
-  margin-top: 10px;
-}
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 10px;
+      margin-top: 10px;
+    }
 
-thead th {
-  text-align: left;
-  padding: 12px 15px;
-  background-color: #007bff;
-  color: white;
-  border-radius: 8px 8px 0 0;
-}
+    thead th {
+      text-align: left;
+      padding: 12px 15px;
+      background-color: #007bff;
+      color: white;
+      border-radius: 8px 8px 0 0;
+      user-select: none;
+    }
 
-tbody tr {
-  background: white;
-  box-shadow: 0 2px 5px rgb(0 0 0 / 0.07);
-  border-radius: 8px;
-  transition: background-color 0.2s;
-}
+    tbody tr {
+      background: white;
+      box-shadow: 0 2px 5px rgb(0 0 0 / 0.07);
+      border-radius: 8px;
+      transition: background-color 0.2s;
+    }
 
-tbody tr:hover {
-  background-color: #f1f7ff;
-}
+    tbody tr:hover {
+      background-color: #f1f7ff;
+    }
 
-tbody td {
-  padding: 12px 15px;
-  vertical-align: middle;
-  color: #333;
-}
+    tbody td {
+      padding: 12px 15px;
+      vertical-align: middle;
+      color: #333;
+    }
 
-tbody td:last-child {
-  width: 110px;
-  text-align: center;
-}
-
-.action-btns {
-  display: flex;
-  gap: 6px;
-  justify-content: center;
-  align-items: center;
-}
-
-.action-btns button {
-  padding: 5px 10px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  border-radius: 5px;
-}
-
-/* Mobile View */
-@media (max-width: 768px) {
-  table {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  thead {
-    display: none; /* Hide table header */
-  }
-
-  tbody tr {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-    padding: 10px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    border-radius: 8px;
-  }
-
-  tbody td {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-  }
-
-  tbody td:last-child {
-    border-bottom: none;
-  }
-
-  tbody td:before {
-    content: attr(data-label); /* Show the column name */
-    font-weight: bold;
-    text-transform: capitalize;
-    margin-right: 10px;
-    color: #555;
-  }
-}
-
+    tbody td:last-child {
+      width: 110px;
+      text-align: center;
+    }
 
     /* Smaller, inline Edit/Delete buttons */
     .action-btns {
