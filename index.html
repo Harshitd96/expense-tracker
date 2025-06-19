@@ -258,30 +258,30 @@ table {
 
   /* Compact table adjustments */
   table {
-    font-size: 0.85rem; /* Slightly smaller font for better readability */
+    font-size: 0.8rem; /* Smaller font for better readability */
     border-spacing: 0; /* Remove extra spacing between rows */
     overflow-x: auto; /* Ensure horizontal scroll if content overflows */
     width: 100%; /* Match the width of the container */
   }
 
   thead th {
-    padding: 8px; /* Reduce header padding */
-    font-size: 0.9rem; /* Slightly smaller font size for headers */
+    padding: 6px; /* Reduce header padding */
+    font-size: 0.85rem; /* Smaller font size for headers */
   }
 
   tbody td {
-    padding: 6px; /* Compact row padding */
-    font-size: 0.85rem; /* Adjust font size for data cells */
+    padding: 4px; /* Compact row padding */
+    font-size: 0.8rem; /* Smaller font size for data cells */
   }
 
   tbody tr {
-    margin-bottom: 4px; /* Reduce space between rows */
+    margin-bottom: 3px; /* Reduce space between rows */
   }
 
   tbody td:last-child {
     width: auto; /* Let the actions column adjust dynamically */
     text-align: center;
-    padding: 5px; /* Compact padding for action buttons */
+    padding: 4px; /* Compact padding for action buttons */
   }
 
   .action-btns button {
@@ -304,12 +304,12 @@ table {
 
   /* Adjust labels and inputs */
   label {
-    font-size: 0.9rem; /* Keep labels readable */
+    font-size: 0.85rem; /* Smaller labels for compactness */
   }
 
   input,
   select {
-    font-size: 0.85rem; /* Adjust input and dropdown font sizes */
+    font-size: 0.8rem; /* Adjust input and dropdown font sizes */
     padding: 6px; /* Compact padding */
     width: 100%; /* Ensure inputs match container width */
   }
@@ -317,15 +317,16 @@ table {
   /* Month Selector Adjustments */
   #month-selector {
     width: 100%; /* Full width on mobile */
-    font-size: 0.85rem; /* Match font size with other inputs */
+    font-size: 0.8rem; /* Match font size with other inputs */
     padding: 6px 8px; /* Adjust padding for better usability */
   }
 
   label[for="month-selector"] {
-    font-size: 0.9rem; /* Consistent label font size */
-    margin-bottom: 4px; /* Add spacing below the label */
+    font-size: 0.85rem; /* Consistent label font size */
+    margin-bottom: 3px; /* Add spacing below the label */
   }
 }
+
 
 
 
@@ -1147,19 +1148,30 @@ function addOrUpdateExpense(event) {
   };
 
   if (editIndex === -1) {
-    expenses.push(updatedExpense);
+    expenses.push(updatedExpense); // Add new expense
   } else {
-    expenses[editIndex] = updatedExpense;
+    expenses[editIndex] = updatedExpense; // Update existing expense
     editIndex = -1;
     form.querySelector('button[type=submit]').textContent = 'Add Expense';
   }
 
+  // Save changes to localStorage
   saveExpenses();
-  applyCurrentMonthFilter(); // Reapply the current month's filter
-  updateCharts(); // Refresh the charts
+
+  // Update the month selector and filter
+  populateMonthSelector(); // Refresh month options
+  applyCurrentMonthFilter(); // Apply the current month's filter
+
+  // Re-render the table and update totals and charts
+  renderExpenses();
+  updateTotals();
+  updateCharts();
+
+  // Reset the form and set today's date
   form.reset();
   setTodayDate();
 }
+
 
 
       // Apply filter for the currently selected month
@@ -1232,21 +1244,28 @@ function updateTotalsForSelectedMonth(filteredExpenses) {
 
       // Delete an expense
       function deleteExpense(i) {
-        if (confirm('Are you sure you want to delete this expense?')) {
-          expenses.splice(i, 1);
-          saveExpenses();
-          renderExpenses();
-          updateTotals();
-          updateCharts();
-          applyCurrentMonthFilter();
-          if (editIndex === i) {
-            editIndex = -1;
-            form.querySelector('button[type=submit]').textContent = 'Add Expense';
-            form.reset();
-            setTodayDate();
-          }
-        }
-      }
+  if (confirm('Are you sure you want to delete this expense?')) {
+    expenses.splice(i, 1); // Remove the expense
+    saveExpenses();
+
+    // Update the month selector and filter
+    populateMonthSelector(); // Refresh month options
+    applyCurrentMonthFilter(); // Apply the current month's filter
+
+    // Re-render the table and update totals and charts
+    renderExpenses();
+    updateTotals();
+    updateCharts();
+
+    if (editIndex === i) {
+      editIndex = -1;
+      form.querySelector('button[type=submit]').textContent = 'Add Expense';
+      form.reset();
+      setTodayDate();
+    }
+  }
+}
+
 
       // Download CSV export of expenses
       window.downloadCSV = function() {
