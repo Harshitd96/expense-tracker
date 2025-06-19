@@ -23,63 +23,6 @@
       align-items: flex-start;
     }
 
- @media (max-width: 480px) {
-  label[for="month-selector"] {
-    display: block; /* Ensure it's treated as a block element */
-    width: auto; /* Allow the label to adjust naturally */
-    margin: 0; /* Remove extra margin to align with other labels */
-    font-size: 1rem; /* Match the label font size */
-    font-weight: 600; /* Ensure label styling consistency */
-  }
-
-  #month-selector {
-    display: block; /* Ensure the dropdown spans the full width */
-    width: 100%; /* Match other inputs in size */
-    padding: 10px 12px; /* Uniform padding */
-    font-size: 1rem; /* Match input font size */
-    border: 1.8px solid #bbb; /* Same border style as inputs */
-    border-radius: 6px; /* Uniform rounded corners */
-    margin-top: 5px; /* Add spacing below the label */
-    box-shadow: none; /* Remove any box shadow */
-  }
-
-  table {
-    font-size: 0.85rem; /* Reduce overall text size */
-  }
-
-  thead th {
-    padding: 8px 10px; /* Reduce header cell padding */
-    font-size: 0.9rem; /* Slightly smaller header font */
-  }
-
-  tbody td {
-    padding: 6px 8px; /* Compact the padding for body cells */
-    font-size: 0.85rem; /* Reduce font size for data rows */
-  }
-
-  tbody tr {
-    margin-bottom: 8px; /* Reduce space between rows */
-  }
-
-  tbody td:last-child {
-    width: auto; /* Adjust actions column to fit dynamically */
-    text-align: center;
-    padding: 5px; /* Compact action buttons */
-  }
-
-  .action-btns button {
-    padding: 4px 6px; /* Make buttons smaller */
-    font-size: 0.8rem; /* Adjust font size for smaller buttons */
-  }
-
-  /* Hide non-critical columns on smaller screens for better compactness */
-  tbody td:nth-child(3), /* Description column */
-  tbody td:nth-child(5) /* Actions column */ {
-    display: none;
-  }
-}
-
-
     .container {
       background: #fff;
       max-width: 900px;
