@@ -269,6 +269,85 @@ table {
     width: 100%;
     padding: 6px 8px;
   }
+
+  @media (max-width: 480px) {
+  /* General adjustments for mobile */
+  body {
+    padding: 20px 10px; /* Reduce padding for mobile screens */
+  }
+
+  .container {
+    padding: 20px; /* Adjust container padding for better fit */
+  }
+
+  /* Compact table adjustments */
+  table {
+    font-size: 0.9rem; /* Slightly smaller font for better readability */
+    border-spacing: 0; /* Remove extra spacing between rows */
+    overflow-x: auto; /* Ensure horizontal scroll if content overflows */
+  }
+
+  thead th {
+    padding: 10px; /* Reduce header padding */
+    font-size: 1rem; /* Slightly smaller font size for headers */
+  }
+
+  tbody td {
+    padding: 8px; /* Compact row padding */
+    font-size: 0.9rem; /* Adjust font size for data cells */
+  }
+
+  tbody tr {
+    margin-bottom: 5px; /* Reduce space between rows */
+  }
+
+  tbody td:last-child {
+    width: auto; /* Let the actions column adjust dynamically */
+    text-align: center;
+    padding: 6px; /* Compact padding for action buttons */
+  }
+
+  .action-btns button {
+    padding: 6px 8px; /* Smaller buttons for mobile */
+    font-size: 0.8rem; /* Adjust font size */
+    border-radius: 5px; /* Maintain button usability */
+  }
+
+  /* Adjust charts for mobile view */
+  .charts-container {
+    flex-direction: column; /* Stack charts vertically */
+    gap: 20px; /* Maintain spacing between charts */
+  }
+
+  canvas {
+    max-width: 100%; /* Ensure charts scale properly on small screens */
+    height: auto; /* Adjust height dynamically */
+  }
+
+  /* Adjust labels and inputs */
+  label {
+    font-size: 0.95rem; /* Keep labels readable */
+  }
+
+  input,
+  select {
+    font-size: 0.9rem; /* Adjust input and dropdown font sizes */
+    padding: 8px; /* Compact padding */
+  }
+
+  /* Month Selector Adjustments */
+  #month-selector {
+    width: 100%; /* Full width on mobile */
+    font-size: 0.9rem; /* Match font size with other inputs */
+    padding: 8px 10px; /* Adjust padding for better usability */
+  }
+
+  label[for="month-selector"] {
+    font-size: 0.95rem; /* Consistent label font size */
+    margin-bottom: 5px; /* Add spacing below the label */
+  }
+}
+
 }
   </style>
 </head>
