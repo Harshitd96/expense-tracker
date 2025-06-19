@@ -157,43 +157,101 @@
       text-align: center;
     }
 
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 10px;
-      margin-top: 10px;
-    }
+    /* Responsive Table Styling */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 10px;
+  margin-top: 10px;
+}
 
-    thead th {
-      text-align: left;
-      padding: 12px 15px;
-      background-color: #007bff;
-      color: white;
-      border-radius: 8px 8px 0 0;
-      user-select: none;
-    }
+thead th {
+  text-align: left;
+  padding: 12px 15px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
 
-    tbody tr {
-      background: white;
-      box-shadow: 0 2px 5px rgb(0 0 0 / 0.07);
-      border-radius: 8px;
-      transition: background-color 0.2s;
-    }
+tbody tr {
+  background: white;
+  box-shadow: 0 2px 5px rgb(0 0 0 / 0.07);
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
 
-    tbody tr:hover {
-      background-color: #f1f7ff;
-    }
+tbody tr:hover {
+  background-color: #f1f7ff;
+}
 
-    tbody td {
-      padding: 12px 15px;
-      vertical-align: middle;
-      color: #333;
-    }
+tbody td {
+  padding: 12px 15px;
+  vertical-align: middle;
+  color: #333;
+}
 
-    tbody td:last-child {
-      width: 110px;
-      text-align: center;
-    }
+tbody td:last-child {
+  width: 110px;
+  text-align: center;
+}
+
+.action-btns {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  align-items: center;
+}
+
+.action-btns button {
+  padding: 5px 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 5px;
+}
+
+/* Mobile View */
+@media (max-width: 768px) {
+  table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  thead {
+    display: none; /* Hide table header */
+  }
+
+  tbody tr {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    border-radius: 8px;
+  }
+
+  tbody td {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+  }
+
+  tbody td:last-child {
+    border-bottom: none;
+  }
+
+  tbody td:before {
+    content: attr(data-label); /* Show the column name */
+    font-weight: bold;
+    text-transform: capitalize;
+    margin-right: 10px;
+    color: #555;
+  }
+}
+
 
     /* Smaller, inline Edit/Delete buttons */
     .action-btns {
@@ -326,6 +384,21 @@
     </div>
 
     <h2>Expenses</h2>
+<div style="display: flex; align-items: center; margin: 0;">
+  <label for="month-selector" style="font-weight: 600; margin-right: 10px;width: 12%;">Select Month:</label>
+  <select id="month-selector" 
+          style="padding: 6px 10px; 
+                 border-radius: 4px; 
+                 border: 1.5px solid #bbb; 
+                 font-size: 0.85rem; 
+                 margin: 0; 
+                 font-weight: 400;
+                 width: 20%;">
+    <!-- Options populated dynamically -->
+  </select>
+</div>
+
+
     <table aria-label="Expense entries">
       <thead>
         <tr>
@@ -430,7 +503,188 @@ function parseCSV(content) {
   alert('CSV data uploaded and totals updated successfully!');
 }
 
+// Populate Month Selector
+// Populate Month Selector Based on Available Data
+function populateMonthSelector() {
+  const monthSelector = document.getElementById('month-selector');
+  monthSelector.innerHTML = ''; // Clear existing options
 
+  // Get unique months from the expenses array
+  const uniqueMonths = [...new Set(expenses.map(exp => exp.date.slice(0, 7)))].sort();
+
+  if (uniqueMonths.length === 0) {
+    // No data available
+    const option = document.createElement('option');
+    option.value = '';
+    option.textContent = 'No Data Available';
+    option.disabled = true;
+    option.selected = true;
+    monthSelector.appendChild(option);
+    return;
+  }
+
+  // Create options for each unique month
+  uniqueMonths.forEach(month => {
+    const date = new Date(month + '-01'); // Convert YYYY-MM to a Date object
+    const optionText = date.toLocaleString('default', { month: 'long', year: 'numeric' });
+    const option = document.createElement('option');
+    option.value = month;
+    option.textContent = optionText;
+    monthSelector.appendChild(option);
+  });
+
+  // Default to the current month if it has data
+  const currentMonth = new Date().toISOString().slice(0, 7);
+  if (uniqueMonths.includes(currentMonth)) {
+    monthSelector.value = currentMonth;
+  } else {
+    monthSelector.selectedIndex = 0; // Default to the first available month
+  }
+}
+
+// Filter Expenses by Selected Month
+function filterExpensesByMonth() {
+  const selectedMonth = document.getElementById('month-selector').value;
+
+  // Filter expenses for the selected month
+  const filteredExpenses = expenses.filter(expense => {
+    const expenseDate = new Date(expense.date);
+    const expenseMonth = expenseDate.toISOString().slice(0, 7); // Format YYYY-MM
+    return expenseMonth === selectedMonth;
+  });
+
+  // Render filtered expenses
+  renderFilteredExpenses(filteredExpenses);
+}
+
+// Render Filtered Expenses in the Table
+function renderFilteredExpenses(filteredExpenses) {
+  const expenseListTbody = document.getElementById('expense-list');
+  expenseListTbody.innerHTML = ''; // Clear previous rows
+
+  filteredExpenses.forEach((exp, i) => {
+    const tr = document.createElement('tr');
+
+    const tdDate = document.createElement('td');
+    tdDate.textContent = exp.date;
+    tr.appendChild(tdDate);
+
+    const tdCategory = document.createElement('td');
+    tdCategory.textContent = exp.category;
+    tr.appendChild(tdCategory);
+
+    const tdDesc = document.createElement('td');
+    tdDesc.textContent = exp.description;
+    tr.appendChild(tdDesc);
+
+    const tdAmount = document.createElement('td');
+    tdAmount.textContent = Number(exp.amount).toFixed(2);
+    tr.appendChild(tdAmount);
+
+    const tdActions = document.createElement('td');
+    const actionDiv = document.createElement('div');
+    actionDiv.className = 'action-btns';
+
+    // Edit button
+    const btnEdit = document.createElement('button');
+    btnEdit.textContent = 'Edit';
+    btnEdit.title = 'Edit this expense';
+    btnEdit.onclick = () => startEditExpense(i);
+    actionDiv.appendChild(btnEdit);
+
+    // Delete button
+    const btnDelete = document.createElement('button');
+    btnDelete.textContent = 'Delete';
+    btnDelete.title = 'Delete this expense';
+    btnDelete.onclick = () => deleteExpense(i);
+    actionDiv.appendChild(btnDelete);
+
+    tdActions.appendChild(actionDiv);
+    tr.appendChild(tdActions);
+
+    expenseListTbody.appendChild(tr);
+  });
+}
+
+// Initialize Month Filter Feature
+function initMonthFilter() {
+  populateMonthSelector(); // Populate dropdown with months
+  filterExpensesByMonth(); // Default to current month
+}
+
+// Update totals and charts based on filtered data
+function updateFilteredTotalsAndCharts() {
+  filterExpensesByMonth(); // Re-render filtered expenses
+  updateTotals(); // Recalculate totals
+  updateCharts(); // Update charts
+}
+
+// Add Event Listener for Month Selector
+document.getElementById('month-selector').addEventListener('change', updateFilteredTotalsAndCharts);
+
+
+// Call initialization during page load
+document.addEventListener('DOMContentLoaded', () => {
+  initMonthFilter();
+});
+
+// Update totals dynamically based on the selected month
+function updateTotalsForSelectedMonth() {
+  const selectedMonth = document.getElementById('month-selector').value;
+  const filteredExpenses = expenses.filter(expense => {
+    const expenseMonth = expense.date.slice(0, 7); // Format YYYY-MM
+    return expenseMonth === selectedMonth;
+  });
+
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // Helper to get the start of the week (Monday)
+  function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day; // Monday is 1, adjust for Sunday
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+  }
+
+  // Get start of week and month for selected month
+  const selectedMonthDate = new Date(selectedMonth + '-01');
+  const monday = getMonday(selectedMonthDate);
+  const startOfMonth = new Date(selectedMonthDate.getFullYear(), selectedMonthDate.getMonth(), 1);
+
+  // Initialize totals
+  let dailyTotal = 0;
+  let weeklyTotal = 0;
+  let monthlyTotal = 0;
+
+  filteredExpenses.forEach(({ date, amount }) => {
+    if (!date || isNaN(amount)) return;
+    const expenseDate = new Date(date);
+    const expenseAmount = Number(amount);
+
+    if (date === todayStr) {
+      dailyTotal += expenseAmount; // Add to daily total
+    }
+    if (expenseDate >= monday && expenseDate <= now) {
+      weeklyTotal += expenseAmount; // Add to weekly total
+    }
+    if (expenseDate >= startOfMonth && expenseDate <= now) {
+      monthlyTotal += expenseAmount; // Add to monthly total
+    }
+  });
+
+  // Update the UI with the totals
+  document.getElementById('daily-total').textContent = dailyTotal.toFixed(2);
+  document.getElementById('weekly-total').textContent = weeklyTotal.toFixed(2);
+  document.getElementById('monthly-total').textContent = monthlyTotal.toFixed(2);
+
+  // Refresh the filtered expense table and charts
+  renderFilteredExpenses(filteredExpenses);
+  updateCharts(filteredExpenses);
+}
+
+// Event Listener for Month Selector
+document.getElementById('month-selector').addEventListener('change', updateTotalsForSelectedMonth);
 
 
 
@@ -741,7 +995,7 @@ checkAndSetupFileConnection();
 
 
       // Update charts
-      function updateCharts() {
+     function updateCharts() {
         // Category chart data (for all time)
         const catTotals = {};
         CATEGORY_OPTIONS.forEach(c => catTotals[c] = 0);
@@ -821,51 +1075,117 @@ checkAndSetupFileConnection();
       }
 
       // Add or update expense
-      function addOrUpdateExpense(event) {
-        event.preventDefault();
+      // Start editing an expense
+function startEditExpense(index) {
+  const exp = expenses[index];
+  dateInput.value = exp.date;
+  categoryInput.value = exp.category;
+  descInput.value = exp.description;
+  amountInput.value = exp.amount;
+  editIndex = index;
+  form.querySelector('button[type=submit]').textContent = 'Update Expense';
+  descInput.focus();
+}
 
-        // Validate inputs
-        if (!dateInput.value) {
-          alert('Please select a date.');
-          return;
-        }
-        if (!categoryInput.value) {
-          alert('Please select a category.');
-          return;
-        }
-        if (!descInput.value.trim()) {
-          alert('Please enter a description.');
-          return;
-        }
-        if (!amountInput.value || Number(amountInput.value) <= 0) {
-          alert('Please enter a valid amount.');
-          return;
-        }
+// Update after editing
+function addOrUpdateExpense(event) {
+  event.preventDefault();
 
-        const newExp = {
-          date: dateInput.value,
-          category: categoryInput.value,
-          description: descInput.value.trim(),
-          amount: Number(amountInput.value).toFixed(2)
-        };
+  // Validate inputs
+  if (!dateInput.value) {
+    alert('Please select a date.');
+    return;
+  }
+  if (!categoryInput.value) {
+    alert('Please select a category.');
+    return;
+  }
+  if (!descInput.value.trim()) {
+    alert('Please enter a description.');
+    return;
+  }
+  if (!amountInput.value || Number(amountInput.value) <= 0) {
+    alert('Please enter a valid amount.');
+    return;
+  }
 
-        if (editIndex === -1) {
-          expenses.push(newExp);
-        } else {
-          expenses[editIndex] = newExp;
-          editIndex = -1;
-          form.querySelector('button[type=submit]').textContent = 'Add Expense';
-        }
+  const updatedExpense = {
+    date: dateInput.value,
+    category: categoryInput.value,
+    description: descInput.value.trim(),
+    amount: Number(amountInput.value).toFixed(2),
+  };
 
-        saveExpenses();
-        renderExpenses();
-        updateTotals();
-        updateCharts();
+  if (editIndex === -1) {
+    expenses.push(updatedExpense);
+  } else {
+    expenses[editIndex] = updatedExpense;
+    editIndex = -1;
+    form.querySelector('button[type=submit]').textContent = 'Add Expense';
+  }
 
-        form.reset();
-        setTodayDate();
-        appendExpenseToFile(newExp);
-      }
+  saveExpenses();
+  applyCurrentMonthFilter(); // Reapply the current month's filter
+  form.reset();
+  setTodayDate();
+}
+
+
+      // Apply filter for the currently selected month
+function applyCurrentMonthFilter() {
+  const selectedMonth = document.getElementById('month-selector').value;
+
+  // Filter expenses for the selected month
+  const filteredExpenses = expenses.filter(expense => {
+    const expenseMonth = expense.date.slice(0, 7); // Format YYYY-MM
+    return expenseMonth === selectedMonth;
+  });
+
+  // Render the filtered expenses
+  renderFilteredExpenses(filteredExpenses);
+
+  // Update totals and charts for the selected month
+  updateTotalsForSelectedMonth(filteredExpenses);
+}
+
+
+// Update totals for the filtered expenses
+function updateTotalsForSelectedMonth(filteredExpenses) {
+  let dailyTotal = 0;
+  let weeklyTotal = 0;
+  let monthlyTotal = 0;
+
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+
+  // Helper to get the start of the week (Monday)
+  function getMonday(d) {
+    const date = new Date(d);
+    const day = date.getDay();
+    const diff = (day === 0 ? -6 : 1) - day; // Monday is 1, adjust for Sunday
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate() + diff);
+  }
+  const monday = getMonday(now);
+
+  filteredExpenses.forEach(({ date, amount }) => {
+    if (!date || isNaN(amount)) return;
+    const expenseDate = new Date(date);
+    const expenseAmount = Number(amount);
+
+    if (date === todayStr) {
+      dailyTotal += expenseAmount; // Add to daily total
+    }
+    if (expenseDate >= monday && expenseDate <= now) {
+      weeklyTotal += expenseAmount; // Add to weekly total
+    }
+    monthlyTotal += expenseAmount; // Add to monthly total
+  });
+
+  // Update UI totals
+  document.getElementById('daily-total').textContent = dailyTotal.toFixed(2);
+  document.getElementById('weekly-total').textContent = weeklyTotal.toFixed(2);
+  document.getElementById('monthly-total').textContent = monthlyTotal.toFixed(2);
+}
 
       // Start editing an expense
       function startEditExpense(i) {
@@ -887,6 +1207,7 @@ checkAndSetupFileConnection();
           renderExpenses();
           updateTotals();
           updateCharts();
+          applyCurrentMonthFilter();
           if (editIndex === i) {
             editIndex = -1;
             form.querySelector('button[type=submit]').textContent = 'Add Expense';
