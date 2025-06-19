@@ -244,13 +244,15 @@ table {
     }
 
     /* Responsive */
-  @media (max-width: 480px) {
+ @media (max-width: 480px) {
   /* General adjustments for mobile */
   body {
     padding: 20px 10px; /* Reduce padding for mobile screens */
   }
 
   .container {
+    width: 100%; /* Ensure consistent width for all elements */
+    max-width: 100%; /* Remove any max-width constraints */
     padding: 20px; /* Adjust container padding for better fit */
   }
 
@@ -259,6 +261,7 @@ table {
     font-size: 0.9rem; /* Slightly smaller font for better readability */
     border-spacing: 0; /* Remove extra spacing between rows */
     overflow-x: auto; /* Ensure horizontal scroll if content overflows */
+    width: 100%; /* Match the width of the container */
   }
 
   thead th {
@@ -291,6 +294,7 @@ table {
   .charts-container {
     flex-direction: column; /* Stack charts vertically */
     gap: 20px; /* Maintain spacing between charts */
+    width: 100%; /* Match the width of the container */
   }
 
   canvas {
@@ -307,6 +311,7 @@ table {
   select {
     font-size: 0.9rem; /* Adjust input and dropdown font sizes */
     padding: 8px; /* Compact padding */
+    width: 100%; /* Ensure inputs match container width */
   }
 
   /* Month Selector Adjustments */
@@ -614,12 +619,16 @@ function updateFilteredTotalsAndCharts() {
 }
 
 // Add Event Listener for Month Selector
-document.getElementById('month-selector').addEventListener('change', updateFilteredTotalsAndCharts);
-
+document.getElementById('month-selector').addEventListener('change', () => {
+  updateCharts();
+  updateFilteredTotalsAndCharts();
+  updateTotalsForSelectedMonth();
+});
 
 // Call initialization during page load
 document.addEventListener('DOMContentLoaded', () => {
   initMonthFilter();
+  updateCharts();
 });
 
 // Update totals dynamically based on the selected month
@@ -677,8 +686,6 @@ function updateTotalsForSelectedMonth() {
   updateCharts(filteredExpenses);
 }
 
-// Event Listener for Month Selector
-document.getElementById('month-selector').addEventListener('change', updateTotalsForSelectedMonth);
 
 
 
@@ -990,83 +997,111 @@ checkAndSetupFileConnection();
 
       // Update charts
      function updateCharts() {
-        // Category chart data (for all time)
-        const catTotals = {};
-        CATEGORY_OPTIONS.forEach(c => catTotals[c] = 0);
-        expenses.forEach(({category, amount}) => {
-          if (catTotals.hasOwnProperty(category)) {
-            catTotals[category] += Number(amount);
-          }
-        });
-        const catLabels = Object.keys(catTotals);
-        const catData = Object.values(catTotals);
+  const selectedMonth = document.getElementById('month-selector').value;
 
-        if (categoryChart) categoryChart.destroy();
-        categoryChart = new Chart(categoryCtx, {
-          type: 'doughnut',
-          data: {
-            labels: catLabels,
-            datasets: [{
-              label: 'Expenses by Category',
-              data: catData,
-              backgroundColor: [
-                '#007bff', '#28a745', '#ffc107', '#17a2b8', '#6c757d'
-              ],
-              borderColor: '#fff',
-              borderWidth: 2,
-            }]
+  // Filter expenses for the selected month
+  const filteredExpenses = selectedMonth
+    ? expenses.filter(exp => exp.date.slice(0, 7) === selectedMonth)
+    : expenses;
+
+  // Category chart data
+  const catTotals = {};
+  CATEGORY_OPTIONS.forEach(c => (catTotals[c] = 0)); // Initialize totals
+  filteredExpenses.forEach(({ category, amount }) => {
+    if (catTotals.hasOwnProperty(category)) {
+      catTotals[category] += Number(amount);
+    }
+  });
+  const catLabels = Object.keys(catTotals);
+  const catData = Object.values(catTotals);
+
+  if (categoryChart) categoryChart.destroy();
+  categoryChart = new Chart(categoryCtx, {
+    type: 'doughnut',
+    data: {
+      labels: catLabels,
+      datasets: [
+        {
+          label: 'Expenses by Category',
+          data: catData,
+          backgroundColor: [
+            '#007bff',
+            '#28a745',
+            '#ffc107',
+            '#17a2b8',
+            '#6c757d',
+          ],
+          borderColor: '#fff',
+          borderWidth: 2,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' },
+        tooltip: { mode: 'index', intersect: false },
+      },
+    },
+  });
+
+  // Monthly chart remains unchanged
+  const now = new Date();
+  const year = now.getFullYear();
+  const monthTotals = Array(12).fill(0);
+  expenses.forEach(({ date, amount }) => {
+    if (!date) return;
+    const d = new Date(date);
+    if (d.getFullYear() === year) {
+      monthTotals[d.getMonth()] += Number(amount);
+    }
+  });
+
+  if (monthChart) monthChart.destroy();
+  monthChart = new Chart(monthCtx, {
+    type: 'bar',
+    data: {
+      labels: [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ],
+      datasets: [
+        {
+          label: `Monthly Expenses ${year}`,
+          data: monthTotals,
+          backgroundColor: '#007bffaa',
+          borderColor: '#0056b3',
+          borderWidth: 1,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 500,
           },
-          options: {
-            responsive: true,
-            plugins: {
-              legend: {position: 'bottom'},
-              tooltip: {mode: 'index', intersect: false}
-            }
-          }
-        });
-
-        // Monthly chart for current year
-        const now = new Date();
-        const year = now.getFullYear();
-        const monthTotals = Array(12).fill(0);
-        expenses.forEach(({date, amount}) => {
-          if (!date) return;
-          const d = new Date(date);
-          if (d.getFullYear() === year) {
-            monthTotals[d.getMonth()] += Number(amount);
-          }
-        });
-
-        if (monthChart) monthChart.destroy();
-        monthChart = new Chart(monthCtx, {
-          type: 'bar',
-          data: {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-            datasets: [{
-              label: `Monthly Expenses ${year}`,
-              data: monthTotals,
-              backgroundColor: '#007bffaa',
-              borderColor: '#0056b3',
-              borderWidth: 1,
-            }]
-          },
-          options: {
-            responsive: true,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  stepSize: 500
-                }
-              }
-            },
-            plugins: {
-              legend: {display: true, position: 'bottom'},
-              tooltip: {mode: 'index', intersect: false}
-            }
-          }
-        });
-      }
+        },
+      },
+      plugins: {
+        legend: { display: true, position: 'bottom' },
+        tooltip: { mode: 'index', intersect: false },
+      },
+    },
+  });
+}
 
       // Add or update expense
       // Start editing an expense
@@ -1120,6 +1155,7 @@ function addOrUpdateExpense(event) {
 
   saveExpenses();
   applyCurrentMonthFilter(); // Reapply the current month's filter
+  updateCharts(); // Refresh the charts
   form.reset();
   setTodayDate();
 }
