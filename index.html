@@ -13,7 +13,7 @@
 
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: #f5f7fa;
+       background: #f5f7fa;
       color: #333;
       margin: 0;
       padding: 40px 15px;
@@ -24,7 +24,7 @@
     }
 
     .container {
-      background: #fff;
+      background-color: rgba(255, 255, 255);
       max-width: 900px;
       width: 100%;
       padding: 30px 30px 40px;
@@ -258,30 +258,30 @@ table {
 
   /* Compact table adjustments */
   table {
-    font-size: 0.8rem; /* Smaller font for better readability */
+    font-size: 0.85rem; /* Slightly smaller font for better readability */
     border-spacing: 0; /* Remove extra spacing between rows */
     overflow-x: auto; /* Ensure horizontal scroll if content overflows */
     width: 100%; /* Match the width of the container */
   }
 
   thead th {
-    padding: 6px; /* Reduce header padding */
-    font-size: 0.85rem; /* Smaller font size for headers */
+    padding: 8px; /* Reduce header padding */
+    font-size: 0.9rem; /* Slightly smaller font size for headers */
   }
 
   tbody td {
-    padding: 4px; /* Compact row padding */
-    font-size: 0.8rem; /* Smaller font size for data cells */
+    padding: 6px; /* Compact row padding */
+    font-size: 0.85rem; /* Adjust font size for data cells */
   }
 
   tbody tr {
-    margin-bottom: 3px; /* Reduce space between rows */
+    margin-bottom: 4px; /* Reduce space between rows */
   }
 
   tbody td:last-child {
     width: auto; /* Let the actions column adjust dynamically */
     text-align: center;
-    padding: 4px; /* Compact padding for action buttons */
+    padding: 5px; /* Compact padding for action buttons */
   }
 
   .action-btns button {
@@ -304,12 +304,12 @@ table {
 
   /* Adjust labels and inputs */
   label {
-    font-size: 0.85rem; /* Smaller labels for compactness */
+    font-size: 0.9rem; /* Keep labels readable */
   }
 
   input,
   select {
-    font-size: 0.8rem; /* Adjust input and dropdown font sizes */
+    font-size: 0.85rem; /* Adjust input and dropdown font sizes */
     padding: 6px; /* Compact padding */
     width: 100%; /* Ensure inputs match container width */
   }
@@ -317,16 +317,15 @@ table {
   /* Month Selector Adjustments */
   #month-selector {
     width: 100%; /* Full width on mobile */
-    font-size: 0.8rem; /* Match font size with other inputs */
+    font-size: 0.85rem; /* Match font size with other inputs */
     padding: 6px 8px; /* Adjust padding for better usability */
   }
 
   label[for="month-selector"] {
-    font-size: 0.85rem; /* Consistent label font size */
-    margin-bottom: 3px; /* Add spacing below the label */
+    font-size: 0.9rem; /* Consistent label font size */
+    margin-bottom: 4px; /* Add spacing below the label */
   }
 }
-
 
 
 
@@ -1244,7 +1243,10 @@ function updateTotalsForSelectedMonth(filteredExpenses) {
 
       // Delete an expense
       function deleteExpense(i) {
-  if (confirm('Are you sure you want to delete this expense?')) {
+        const exp = expenses[i]; // Get the expense to be deleted
+  const confirmMessage = `Are you sure you want to delete the following expense?\n\nDate: ${exp.date}\nCategory: ${exp.category}\nDescription: ${exp.description}\nAmount: ₹${exp.amount}`;
+  
+  if (confirm(confirmMessage)) {
     expenses.splice(i, 1); // Remove the expense
     saveExpenses();
 
